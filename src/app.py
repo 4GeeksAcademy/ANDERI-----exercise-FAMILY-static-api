@@ -27,16 +27,46 @@ def sitemap():
 
 @app.route('/members', methods=['GET'])
 def handle_hello():
-
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
     response_body = {
-        "hello": "world",
         "family": members
     }
-
-
     return jsonify(response_body), 200
+
+@app.route('/members/<int:id>', methods=['GET'])
+def handle_hello_member(id):
+    member = jackson_family.get_member(id)
+    try:
+        if not member:
+            raise APIException("Miembro no encontrado", status_code=400)
+        return jsonify(member), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/member', methods=['POST'])
+def add_new_member():
+    try:
+        member = request.json
+        if member is None or not all(key in member for key in ["first_name", "last_name", "age", "lucky_numbers"]):
+            raise ValueError("El objeto JSON de la solicitud está incompleto")
+        jackson_family.add_member(member)
+        return jsonify(jackson_family.get_all_members()), 201
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 400
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/member/<int:id>", methods=["DELETE"])
+def delete_family_member(id):
+    try:
+        deleted_member = jackson_family.delete_member(id)
+        if not deleted_member:
+            raise APIException("Miembro no encontrado", status_code=400)
+        return jsonify({"done": "Miembro eliminado"})
+    except Exception as e:
+        # Handle error 500
+        return jsonify({"error": str(e)}), 500
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
