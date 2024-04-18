@@ -36,24 +36,28 @@ def handle_hello():
 
 @app.route('/members/<int:id>', methods=['GET'])
 def handle_hello_member(id):
-    member = jackson_family.get_member(id)
     try:
+        member = jackson_family.get_member(id)
         if not member:
             raise APIException("Miembro no encontrado", status_code=400)
         return jsonify(member), 200
+    except APIException as e:
+        return jsonify({"error": e.message}), e.status_code
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 @app.route('/member', methods=['POST'])
 def add_new_member():
     try:
+        if request.json is None:
+            raise ValueError("Empty request body")
         member = request.json
-        if member is None or not all(key in member for key in ["first_name", "last_name", "age", "lucky_numbers"]):
-            raise ValueError("El objeto JSON de la solicitud está incompleto")
+        if not all(key in member for key in ["first_name", "last_name", "age", "lucky_numbers"]):
+            raise ValueError("JSON object of request is incomplete")
         jackson_family.add_member(member)
         return jsonify(jackson_family.get_all_members()), 201
     except ValueError as e:
-        return jsonify({"error": str(e)}), 400
+        return jsonify({"error": e.message}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -63,9 +67,10 @@ def delete_family_member(id):
         deleted_member = jackson_family.delete_member(id)
         if not deleted_member:
             raise APIException("Miembro no encontrado", status_code=400)
-        return jsonify({"done": "Miembro eliminado"})
+        return jsonify({"done": True})
+    except APIException as e:
+        return jsonify({"error": e.message}), e.status_code
     except Exception as e:
-        # Handle error 500
         return jsonify({"error": str(e)}), 500
 
 # this only runs if `$ python src/app.py` is executed
