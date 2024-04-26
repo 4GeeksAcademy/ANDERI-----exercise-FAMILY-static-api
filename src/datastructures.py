@@ -17,21 +17,18 @@ class FamilyStructure:
             {
             "id": 1,
             "first_name": "John",
-            "last_name": "Jackson",
             "age": 33,
             "lucky_numbers": [7, 13, 22]
             },
             {
             "id": 2,
             "first_name": "Jane",
-            "last_name": "Jackson",
             "age": 35,
             "lucky_numbers": [10, 14, 3]
             },
             {
              "id": 3,
             "first_name": "Jimmy",
-            "last_name": "Jackson",
             "age": 5,
             "lucky_numbers": [1]   
             }
@@ -42,11 +39,12 @@ class FamilyStructure:
         return randint(0, 99999999)
 
     def add_member(self, member):
-        if not member.get("id"):
-            member["id"] = self._generateId()
+        if "id" not in member:
+            new_id = self._generateId()
+            member["id"] = new_id
         self._members.append(member)
+        return 
         
-
     def delete_member(self, id):
         for member in self._members:
             if member["id"] == id:
@@ -54,11 +52,12 @@ class FamilyStructure:
                 return True
         return False
 
+
     def get_member(self, id):
         for member in self._members:
             if member["id"] == id:
                 return member
-        return None
+        
 
     # this method is done, it returns a list with all the family members
     def get_all_members(self):

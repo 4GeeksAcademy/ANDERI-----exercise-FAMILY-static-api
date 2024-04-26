@@ -25,53 +25,59 @@ def handle_invalid_usage(error):
 def sitemap():
     return generate_sitemap(app)
 
-@app.route('/members', methods=['GET'])
+@app.route('/members', methods = ['GET'])
 def handle_hello():
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
-    response_body = {
-        "family": members
-    }
-    return jsonify(response_body), 200
+    response_body = jsonify(members)
+    return response_body, 200
 
-@app.route('/members/<int:id>', methods=['GET'])
-def handle_hello_member(id):
+@app.route("/member/<int:id>", methods=["GET"])
+def handle_single_member(id):
     try:
-        member = jackson_family.get_member(id)
-        if not member:
-            raise APIException("Miembro no encontrado", status_code=400)
-        return jsonify(member), 200
-    except APIException as e:
-        return jsonify({"error": e.message}), e.status_code
+        single_member = jackson_family.get_member(id)
+        if single_member:
+            return jsonify(single_member), 200
+        else:
+            return jsonify({"error": "Member not found"}), 404
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-@app.route('/member', methods=['POST'])
+
+@app.route("/member/", methods=["POST"])
 def add_new_member():
     try:
-        if request.json is None:
-            raise ValueError("Empty request body")
-        member = request.json
-        if not all(key in member for key in ["first_name", "last_name", "age", "lucky_numbers"]):
-            raise ValueError("JSON object of request is incomplete")
-        jackson_family.add_member(member)
-        return jsonify(jackson_family.get_all_members()), 201
-    except ValueError as e:
-        return jsonify({"error": e.message}), 400
+        new_member = request.json
+        required_fields = ["first_name", "age", "lucky_numbers"]
+        for field in required_fields:
+            if field not in new_member:
+                raise ValueError(f"Missing required field: {field}")
+
+        jackson_family.add_member(new_member)
+        members = jackson_family.get_all_members()
+        response_body = jsonify(members)
+        return response_body, 200
+
+    except ValueError as ve:
+        error_message = str(ve)
+        return jsonify({"error": error_message}), 400
+
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_message = "An error occurred while adding a new member"
+        return jsonify({"error": error_message}), 500
+
 
 @app.route("/member/<int:id>", methods=["DELETE"])
-def delete_family_member(id):
+def delete_a_member(id):
     try:
-        deleted_member = jackson_family.delete_member(id)
-        if not deleted_member:
-            raise APIException("Miembro no encontrado", status_code=400)
-        return jsonify({"done": True})
-    except APIException as e:
-        return jsonify({"error": e.message}), e.status_code
+        member_to_delete = jackson_family.delete_member(id)
+        if member_to_delete:
+            return jsonify({"done": member_to_delete}), 200
+        else:
+            return jsonify({"not done": "member not found"})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        error_message = "An error occurred while deleting the member"
+        return jsonify({"error": error_message}), 500
 
 # this only runs if `$ python src/app.py` is executed
 if __name__ == '__main__':
