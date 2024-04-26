@@ -74,7 +74,7 @@ def delete_a_member(id):
         if member_to_delete:
             return jsonify({"done": member_to_delete}), 200
         else:
-            return jsonify({"not done": "member not found"})
+            return jsonify({"not done": "member not found"}), 404
     except Exception as e:
         error_message = "An error occurred while deleting the member"
         return jsonify({"error": error_message}), 500
